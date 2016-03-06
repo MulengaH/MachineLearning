@@ -1,0 +1,122 @@
+---
+output: html_document
+---
+# Machine Learning-Prediction: Peer Assessment
+
+### Humphrey Mulenga : 05-March-2016
+## Prediction of the manner in which the exercise was done
+
+### Exceutive summary
+With devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity quite 
+cheaply. Using these devices, enthusiasts take measurements about themselves regularly to improve their health, to find patterns in their behavior,
+or because they are tech geeks. One thing that they regularly do is quantify how much of a particular activity they do, but they rarely 
+quantify how well they do it. 
+We aimed to predict the manner in which they did the exercise using data from accelerometers on the belt, forearm, arm, and dumbell of six 
+participants who were asked to perform barbell lifts correctly and incorrectly in five different ways and we used machine learning tools for 
+prediction, namely decision trees and random forests.
+In this study, we found that Random Forests gave an the most accurate result with an accuracy of xx in the myTesting dataset. The expected 
+out-of-sample error was 100-99.89 = 0.11%..
+
+### Methods
+We used the Unilateral Dumbbell Biceps Curl study dataset which contains readings from motion sensors on participant's bodies'. These readings 
+were used to classify the performed exercise into five categories as follows; (i) exactly according to the specification (Class A), (ii) throwing
+the elbows to the front (Class B), (iii) lifting the dumbbell only halfway (Class C), (iv) lowering the dumbbell only halfway (Class D) and (v) 
+throwing the hips to the front (Class E) (http://groupware.les.inf.puc-rio.br/har).
+We transformed the variables that needed transformation. We excluded variables with near zero values and also excluded vriables with atleast 60% 
+of the data missing. We also perfomed the necessary exploratory data analysis using,histograms. Thereafter, we then used several  machine learning
+tools for prediction, namely decision trees, random forests and generalised boosted regression to fit the required models in order to perform 
+the needed comparisons and select a model with the best prediction. However, only two methods are reported here..
+
+
+#### loading the data and required libraries
+```{r LoadData,echo = TRUE}
+
+setwd("C:/Users/01420965/Documents/Coursera/MachineLearning/PJ")
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(RColorBrewer)
+# library(rattle)
+library(randomForest)
+library(knitr)
+library(ggplot2)
+training = read.csv("pml-training.csv",header=TRUE)
+testing = read.csv("pml-testing.csv",header=TRUE)
+dim(training)
+```
+
+
+#### Data cleaning
+```{r CleanData,echo = TRUE}
+# remove near zero variance variables 
+nzv <- nearZeroVar(training, saveMetrics=TRUE)
+training <- training[,nzv$nzv==FALSE]
+training <- training[c(-1)] # remove first column
+# remove variables with atleaset 60% data missing
+training2 <- training
+for(i in 1:length(training)) {
+    if( sum( is.na(training[, i] ) ) /nrow(training) >= .6) {
+        for(j in 1:length(training2)) {
+            if( length( grep(names(training[i]), names(training2)[j]) ) == 1)  {
+                training2 <- training2[ , -j]
+            }   
+        } 
+    }
+}
+
+training <- training2 # Set back to the original dataset name 
+rm(training2) # remove traing2 data dataset
+```
+
+
+#### Data partitioning: 
+```{r Partition ,echo = TRUE}
+inTrain <- createDataPartition(training$classe, p=0.6, list=FALSE)
+myTrainSet <- training[inTrain, ]
+myTestSet <- training[-inTrain, ]
+dim(myTrainSet); dim(myTestSet)
+```
+
+### Results
+
+#### Model fitting and predictions: 
+```{r Predicting,echo = TRUE}
+#Prediction with Random Forest
+set.seed(2217)
+modFitA <- randomForest(classe ~ ., data=myTrainSet)
+predictionA <- predict(modFitA, myTestSet, type = "class")
+cmRandF <- confusionMatrix(predictionA, myTestSet$classe)
+cmRandF
+
+#Prediction with Regression (Decision) Tree
+set.seed(2217)
+modFitB <- rpart(classe ~ ., data=myTrainSet, method="class")
+#fancyRpartPlot(modFitB)
+predictionB <- predict(modFitB, myTestSet, type = "class")
+cmDecT <- confusionMatrix(predictionB, myTestSet$classe)
+cmDecT
+```
+
+The final and best prediction model chosen was Random Forests which gave the best accuracy in the myTestSet dataset of 99.89%. This was 
+more accurate that produced by the from the Decision Trees and the GBM model. The expected out-of-sample error is 100-99.91 = 0.09%. 
+Prediction with regression trees and prediction cy of 88.06%. Seeing that the Random Forest was the better prediction method here, Cross
+validation was not done, since according to the creators of the Random Forest algorithm this is not neccessary: "In random forests, 
+there is no need for cross-validation or a separate test set to get an unbiased estimate of the test set error." - Leo Breiman and Adele Cutler
+
+
+### Conclusions
+
+Having used three different prediction models in this study, we can simply say that the Random forest classification technique works better 
+than the regression tree and boosting with regression for this data.The random forest produced the most accurate results on the test dataset.
+However, despite the random forest giving the most accurate results, it did take longer to run and this may be something to   look at if 
+working very large datsets.
+ 
+
+
+
+
+
+
+
+
+
