@@ -120,7 +120,7 @@ $(document).ready(function () {
 <h2>Prediction of the manner in which the exercise was done</h2>
 <div id="exceutive-summary" class="section level3">
 <h3>Exceutive summary</h3>
-<p>With devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity quite cheaply. Using these devices, enthusiasts take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that they regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. We aimed to predict the manner in which they did the exercise using data from accelerometers on the belt, forearm, arm, and dumbell of six participants who were asked to perform barbell lifts correctly and incorrectly in five different ways and we used machine learning tools for prediction, namely decision trees and random forests. In this study, we found that Random Forests gave an the most accurate result with an accuracy of xx in the myTesting dataset. The expected out-of-sample error was 100-99.89 = 0.11%..</p>
+<p>With devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity quite cheaply. Using these devices, enthusiasts take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that they regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. We aimed to predict the manner in which they did the exercise using data from accelerometers on the belt, forearm, arm, and dumbell of six participants who were asked to perform barbell lifts correctly and incorrectly in five different ways and we used machine learning tools for prediction, namely decision trees and random forests. In this study, we found that Random Forests gave an the most accurate result with an accuracy of xx in the myTesting dataset. The expected out-of-sample error was 100-99.75 = 0.25%..</p>
 </div>
 <div id="methods" class="section level3">
 <h3>Methods</h3>
@@ -169,16 +169,34 @@ for(i in 1:length(training)) {
 }
 
 training &lt;- training2 # Set back to the original dataset name 
-rm(training2) # remove traing2 data dataset</code></pre>
+rm(training2) # remove training2 data dataset</code></pre>
 </div>
-<div id="data-partitioning" class="section level4">
-<h4>Data partitioning:</h4>
+<div id="data-partitioning-and-coersion" class="section level4">
+<h4>Data partitioning and coersion</h4>
 <pre class="r"><code>inTrain &lt;- createDataPartition(training$classe, p=0.6, list=FALSE)
 myTrainSet &lt;- training[inTrain, ]
 myTestSet &lt;- training[-inTrain, ]
 dim(myTrainSet); dim(myTestSet)</code></pre>
 <pre><code>## [1] 11776    58</code></pre>
 <pre><code>## [1] 7846   58</code></pre>
+<pre class="r"><code>cln1 &lt;- colnames(myTrainSet)
+cln2 &lt;- colnames(myTrainSet[, -58])  # remove the classe column
+myTestSet &lt;- myTestSet[cln1]         # Ensure only variables in myTestSet are in myTrainSet
+testing &lt;- testing[cln2]             # Ensure only variables in myTrainSet are in testing
+dim(myTestSet)</code></pre>
+<pre><code>## [1] 7846   58</code></pre>
+<pre class="r"><code>dim(testing)</code></pre>
+<pre><code>## [1] 20 57</code></pre>
+<pre class="r"><code>for (i in 1:length(testing) ) {
+    for(j in 1:length(myTrainSet)) {
+        if( length( grep(names(myTrainSet[i]), names(testing)[j]) ) == 1)  {
+            class(testing[j]) &lt;- class(myTrainSet[i])
+        }      
+    }      
+}
+# To get the same class between testing and myTrainSet
+testing &lt;- rbind(myTrainSet[2, -58] , testing)
+testing &lt;- testing[-1,]</code></pre>
 </div>
 </div>
 <div id="results" class="section level3">
@@ -196,32 +214,32 @@ cmRandF</code></pre>
 ##           Reference
 ## Prediction    A    B    C    D    E
 ##          A 2232    0    0    0    0
-##          B    0 1518    0    0    0
-##          C    0    0 1368    1    0
-##          D    0    0    0 1285    0
-##          E    0    0    0    0 1442
+##          B    0 1518    4    0    0
+##          C    0    0 1364    2    0
+##          D    0    0    0 1284    6
+##          E    0    0    0    0 1436
 ## 
 ## Overall Statistics
-##                                      
-##                Accuracy : 0.9999     
-##                  95% CI : (0.9993, 1)
-##     No Information Rate : 0.2845     
-##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16  
-##                                      
-##                   Kappa : 0.9998     
-##  Mcnemar's Test P-Value : NA         
+##                                           
+##                Accuracy : 0.9985          
+##                  95% CI : (0.9973, 0.9992)
+##     No Information Rate : 0.2845          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.9981          
+##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            1.0000   1.0000   1.0000   0.9992   1.0000
-## Specificity            1.0000   1.0000   0.9998   1.0000   1.0000
-## Pos Pred Value         1.0000   1.0000   0.9993   1.0000   1.0000
-## Neg Pred Value         1.0000   1.0000   1.0000   0.9998   1.0000
+## Sensitivity            1.0000   1.0000   0.9971   0.9984   0.9958
+## Specificity            1.0000   0.9994   0.9997   0.9991   1.0000
+## Pos Pred Value         1.0000   0.9974   0.9985   0.9953   1.0000
+## Neg Pred Value         1.0000   1.0000   0.9994   0.9997   0.9991
 ## Prevalence             0.2845   0.1935   0.1744   0.1639   0.1838
-## Detection Rate         0.2845   0.1935   0.1744   0.1638   0.1838
-## Detection Prevalence   0.2845   0.1935   0.1745   0.1638   0.1838
-## Balanced Accuracy      1.0000   1.0000   0.9999   0.9996   1.0000</code></pre>
+## Detection Rate         0.2845   0.1935   0.1738   0.1637   0.1830
+## Detection Prevalence   0.2845   0.1940   0.1741   0.1644   0.1830
+## Balanced Accuracy      1.0000   0.9997   0.9984   0.9988   0.9979</code></pre>
 <pre class="r"><code>#Prediction with Regression (Decision) Tree
 set.seed(2217)
 modFitB &lt;- rpart(classe ~ ., data=myTrainSet, method=&quot;class&quot;)
@@ -233,39 +251,56 @@ cmDecT</code></pre>
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 2141   73    6    1    0
-##          B   74 1305  117   65    0
-##          C   17  129 1203  185   50
-##          D    0   11   23  835   85
-##          E    0    0   19  200 1307
+##          A 2139   67    7    1    0
+##          B   66 1290  103   60    0
+##          C   27  149 1242  152   65
+##          D    0   12   10  851   77
+##          E    0    0    6  222 1300
 ## 
 ## Overall Statistics
-##                                          
-##                Accuracy : 0.8655         
-##                  95% CI : (0.8578, 0.873)
-##     No Information Rate : 0.2845         
-##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16      
-##                                          
-##                   Kappa : 0.8298         
-##  Mcnemar's Test P-Value : NA             
+##                                           
+##                Accuracy : 0.8695          
+##                  95% CI : (0.8618, 0.8769)
+##     No Information Rate : 0.2845          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.8349          
+##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.9592   0.8597   0.8794   0.6493   0.9064
-## Specificity            0.9857   0.9595   0.9412   0.9819   0.9658
-## Pos Pred Value         0.9640   0.8360   0.7595   0.8753   0.8565
-## Neg Pred Value         0.9838   0.9661   0.9737   0.9346   0.9786
+## Sensitivity            0.9583   0.8498   0.9079   0.6617   0.9015
+## Specificity            0.9866   0.9638   0.9393   0.9849   0.9644
+## Pos Pred Value         0.9661   0.8492   0.7596   0.8958   0.8508
+## Neg Pred Value         0.9835   0.9640   0.9797   0.9369   0.9775
 ## Prevalence             0.2845   0.1935   0.1744   0.1639   0.1838
-## Detection Rate         0.2729   0.1663   0.1533   0.1064   0.1666
-## Detection Prevalence   0.2831   0.1990   0.2019   0.1216   0.1945
-## Balanced Accuracy      0.9725   0.9096   0.9103   0.8156   0.9361</code></pre>
-<p>The final and best prediction model chosen was Random Forests which gave the best accuracy in the myTestSet dataset of 99.89%. This was more accurate that produced by the from the Decision Trees and the GBM model. The expected out-of-sample error is 100-99.91 = 0.09%. Prediction with regression trees and prediction cy of 88.06%. Seeing that the Random Forest was the better prediction method here, Cross validation was not done, since according to the creators of the Random Forest algorithm this is not neccessary: “In random forests, there is no need for cross-validation or a separate test set to get an unbiased estimate of the test set error.” - Leo Breiman and Adele Cutler</p>
+## Detection Rate         0.2726   0.1644   0.1583   0.1085   0.1657
+## Detection Prevalence   0.2822   0.1936   0.2084   0.1211   0.1947
+## Balanced Accuracy      0.9725   0.9068   0.9236   0.8233   0.9330</code></pre>
+<p>The final and best prediction model chosen was Random Forests which gave the best accuracy in the myTestSet dataset of 99.75%. This was more accurate that produced by the from the Decision Trees and the GBM model. The expected out-of-sample error is 100-99.75 = 0.25%. Prediction with regression trees and prediction cy of 87.67%. Seeing that the Random Forest was the better prediction method here, Cross validation was not done, since according to the creators of the Random Forest algorithm this is not neccessary: “In random forests, there is no need for cross-validation or a separate test set to get an unbiased estimate of the test set error.” - Leo Breiman and Adele Cutler</p>
 </div>
 </div>
 <div id="conclusions" class="section level3">
 <h3>Conclusions</h3>
 <p>Having used three different prediction models in this study, we can simply say that the Random forest classification technique works better than the regression tree and boosting with regression for this data.The random forest produced the most accurate results on the test dataset. However, despite the random forest giving the most accurate results, it did take longer to run and this may be something to look at if working very large datsets.</p>
+</div>
+<div id="appendix--predicting-classes-of-test-data" class="section level3">
+<h3>Appendix -Predicting classes of test data</h3>
+<pre class="r"><code>#Prediction with Random Forest
+predictionA2 &lt;- predict(modFitA, testing, type = &quot;class&quot;)
+predictionA2</code></pre>
+<pre><code>##  2 31  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 
+##  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
+## Levels: A B C D E</code></pre>
+<pre class="r"><code># Write the results to a text file for submission
+pml_write_files = function(x){
+    n = length(x)
+    for(i in 1:n){
+        filename = paste0(&quot;problem_id_&quot;,i,&quot;.txt&quot;)
+        write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+    }
+}</code></pre>
 </div>
 </div>
 </div>

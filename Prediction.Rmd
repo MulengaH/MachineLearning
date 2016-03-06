@@ -15,7 +15,7 @@ We aimed to predict the manner in which they did the exercise using data from ac
 participants who were asked to perform barbell lifts correctly and incorrectly in five different ways and we used machine learning tools for 
 prediction, namely decision trees and random forests.
 In this study, we found that Random Forests gave an the most accurate result with an accuracy of xx in the myTesting dataset. The expected 
-out-of-sample error was 100-99.89 = 0.11%..
+out-of-sample error was 100-99.75 = 0.25%..
 
 ### Methods
 We used the Unilateral Dumbbell Biceps Curl study dataset which contains readings from motion sensors on participant's bodies'. These readings 
@@ -65,16 +65,35 @@ for(i in 1:length(training)) {
 }
 
 training <- training2 # Set back to the original dataset name 
-rm(training2) # remove traing2 data dataset
+rm(training2) # remove training2 data dataset
 ```
 
 
-#### Data partitioning: 
+#### Data partitioning and coersion
 ```{r Partition ,echo = TRUE}
 inTrain <- createDataPartition(training$classe, p=0.6, list=FALSE)
 myTrainSet <- training[inTrain, ]
 myTestSet <- training[-inTrain, ]
 dim(myTrainSet); dim(myTestSet)
+
+cln1 <- colnames(myTrainSet)
+cln2 <- colnames(myTrainSet[, -58])  # remove the classe column
+myTestSet <- myTestSet[cln1]         # Ensure only variables in myTestSet are in myTrainSet
+testing <- testing[cln2]             # Ensure only variables in myTrainSet are in testing
+dim(myTestSet)
+dim(testing)
+for (i in 1:length(testing) ) {
+    for(j in 1:length(myTrainSet)) {
+        if( length( grep(names(myTrainSet[i]), names(testing)[j]) ) == 1)  {
+            class(testing[j]) <- class(myTrainSet[i])
+        }      
+    }      
+}
+# To get the same class between testing and myTrainSet
+testing <- rbind(myTrainSet[2, -58] , testing)
+testing <- testing[-1,]
+
+
 ```
 
 ### Results
@@ -97,9 +116,9 @@ cmDecT <- confusionMatrix(predictionB, myTestSet$classe)
 cmDecT
 ```
 
-The final and best prediction model chosen was Random Forests which gave the best accuracy in the myTestSet dataset of 99.89%. This was 
-more accurate that produced by the from the Decision Trees and the GBM model. The expected out-of-sample error is 100-99.91 = 0.09%. 
-Prediction with regression trees and prediction cy of 88.06%. Seeing that the Random Forest was the better prediction method here, Cross
+The final and best prediction model chosen was Random Forests which gave the best accuracy in the myTestSet dataset of 99.75%. This was 
+more accurate that produced by the from the Decision Trees and the GBM model. The expected out-of-sample error is 100-99.75 = 0.25%. 
+Prediction with regression trees and prediction cy of 87.67%. Seeing that the Random Forest was the better prediction method here, Cross
 validation was not done, since according to the creators of the Random Forest algorithm this is not neccessary: "In random forests, 
 there is no need for cross-validation or a separate test set to get an unbiased estimate of the test set error." - Leo Breiman and Adele Cutler
 
@@ -111,8 +130,22 @@ than the regression tree and boosting with regression for this data.The random f
 However, despite the random forest giving the most accurate results, it did take longer to run and this may be something to   look at if 
 working very large datsets.
  
+### Appendix -Predicting classes of test data
+```{r Predicting2,echo = TRUE}
+#Prediction with Random Forest
+predictionA2 <- predict(modFitA, testing, type = "class")
+predictionA2
 
+# Write the results to a text file for submission
+pml_write_files = function(x){
+    n = length(x)
+    for(i in 1:n){
+        filename = paste0("problem_id_",i,".txt")
+        write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+    }
+}
 
+```
 
 
 
